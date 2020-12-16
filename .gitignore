@@ -1,5 +1,6 @@
 .gitignore
 keys
-data-consul/consu-01/**
+data-consul/consu-01/*
+!data-consul/consu-01/.gitkeep
 data-consul/consu-02/**
 data-consul/consu-03/**
