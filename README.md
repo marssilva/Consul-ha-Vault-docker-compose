@@ -5,6 +5,6 @@
 - docker
 - docker-compose
 
-# Após o clone dentro da pasta, faça assim:
+# Após o clone, dentro da pasta, faça assim:
 
 `docker-compose up -d`
