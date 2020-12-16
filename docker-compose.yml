@@ -1,0 +1,88 @@
+version: "3.9"
+
+# https://github.com/hashicorp/consul/blob/master/demo/docker-compose-cluster/docker-compose.yml
+
+services:
+  consul-agent-1: &consul-agent
+    image: consul:latest
+    container_name: consul-agent-1
+    hostname: consul-agent-1
+    networks:
+      - vault-consul
+    command: "agent -retry-join consul-server-bootstrap -client 0.0.0.0"
+
+  consul-agent-2:
+    container_name: consul-agent-2
+    hostname: consul-agent-2
+    <<: *consul-agent
+
+  consul-agent-3:
+    container_name: consul-agent-3
+    hostname: consul-agent-3
+    <<: *consul-agent
+
+  consul-server-1: &consul-server
+    container_name: consul-server-1
+    hostname: consul-server-1
+    volumes: 
+      - ./data-consul/consu-01/:/consul/data/
+    <<: *consul-agent
+    command: "agent -server -retry-join consul-server-bootstrap -client 0.0.0.0"
+
+  consul-server-2:
+    container_name: consul-server-2
+    hostname: consul-server-2
+    volumes: 
+      - ./data-consul/consu-02/:/consul/data/
+    <<: *consul-server
+
+  consul-server-bootstrap:
+    container_name: consul-server-3
+    hostname: consul-server-3
+    volumes: 
+      - ./data-consul/consu-03/:/consul/data/
+    <<: *consul-agent
+    ports:
+      - "8400:8400"
+      - "8500:8500"
+      - "8600:8600"
+      - "8600:8600/udp"
+    command: "agent -server -bootstrap-expect 3 -ui -client 0.0.0.0"
+
+  vault-server-1: &vault-server
+    container_name: vault-server-1
+    hostname: vault-server-1
+    image: vault:latest
+    environment:
+        - VAULT_ADDR=http://0.0.0.0:8200
+        - VAULT_API_ADDR=http://0.0.0.0:8200
+        - VAULT_ADDRESS=http://0.0.0.0:8200
+    volumes: 
+      - ./config-vault/va-01:/vault/config
+    ports: 
+      - 8201:8200  
+    command: "server -log-level trace "
+    networks:
+      - vault-consul
+    cap_add:
+      - IPC_LOCK  
+  
+  vault-server-2:
+    container_name: vault-server-2
+    hostname: vault-server-2
+    ports: 
+      - 8202:8200  
+    volumes: 
+      - ./config-vault/va-02:/vault/config
+    <<: *vault-server  
+
+  vault-server-3:
+    container_name: vault-server-3
+    hostname: vault-server-3
+    ports: 
+      - 8203:8200  
+    volumes: 
+      - ./config-vault/va-03:/vault/config
+    <<: *vault-server    
+networks: 
+  vault-consul:      
