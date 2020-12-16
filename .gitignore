@@ -1,3 +1,4 @@
+.gitignore
 keys
 data-consul/consu-01/*
 data-consul/consu-02/*
